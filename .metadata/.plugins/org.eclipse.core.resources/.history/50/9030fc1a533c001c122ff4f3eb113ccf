@@ -1,0 +1,128 @@
+// ER8.5 USCI_A0 com HC-05
+//
+// HC-05: VCC = +5 V
+// HC-05: GND = GND
+// HC-05: RXD = P3.3 (USCI_A0: TXD)
+// HC-05: TXD = P3.4 (USCI_A0: RXD)
+// USCI_A0 Transmite letras de A até Z
+// 9.600 bauds (ACLK), 8 bits, sem paridade, 1 stop
+
+#include <msp430.h>
+
+#define TRUE 1
+
+void USCI_A0_config(void);
+
+int main(void){
+    char letra='A';
+    WDTCTL = WDTPW | WDTHOLD; // stop watchdog timer
+    USCI_A0_config();
+    while(TRUE){                            //Laço principal
+        while ( (UCA0IFG&UCTXIFG)==0);      //Esperar TXIFG=1
+        UCA0IFG = 0;
+        UCA0TXBUF=letra++;                  //Próxima letra
+        if (letra == 'Z'+1) letra='\n';     //Nova linha
+        if (letra == '\n'+1) letra='A';     //Volta ao 'A'
+
+        while((UCA0IFG&UCRXIFG)==0); // Esperar receber
+                letra = UCA1RXBUF;     // Buffer de recepcao
+    }
+    return 0;
+}
+
+// Configurar USCI_A0
+void USCI_A0_config(void){
+    UCA0CTL1 = UCSWRST; //RST=1 para USCI_A0
+    UCA0CTL0 = 0; //sem paridade, 8 bits, 1 stop, modo UART
+    UCA0BRW = 3; //Divisor
+    UCA0MCTL = UCBRS_3; //Modulador = 3 e UCOS=0
+    P3SEL |= BIT4 | BIT3; //Disponibilizar pinos
+    UCA0CTL1 = UCSSEL_1; //RST=0, ACLK
+}
+
+
+
+//// Enviar letras para o PC
+//
+//// USCI_A1 a 9.600 bits por s e 8 bits de dados
+//// P4.4 = TXD
+//// P4.5 = RXD
+//
+//#include <msp430.h>
+//
+//#define CR  0xD // ASCII para Carriage return: Voltar para o inicio da linha
+//#define LF  0xA // ASCII para Line Feed: Quebra de linha
+//
+////void uart1_config(void);
+//void uart0_config(void);
+//void ser_str(char *p);
+//void ser_char(char c);
+//
+//int main(void){
+//    char letra='A';
+//
+//    WDTCTL = WDTPW | WDTHOLD;   // stop watchdog timer
+//    uart0_config();
+////    ser_str("teste da serial\n");
+//
+//    while(1){
+//        while((UCA0IFG&UCTXIFG) == 0);
+//        UCA0TXBUF=letra++;
+//        if (letra == 'Z' + 1)
+//            letra = LF;
+//        else if (letra == LF + 1)
+//            letra = CR;
+//        else if (letra == CR + 1)
+//            letra = 'A';
+////        ser_char(letra++);
+////        if (letra == 'Z' + 1)
+////            letra = LF;
+////        else if (letra == LF + 1)
+////            letra = CR;
+////        else if (letra == CR + 1)
+////            letra = 'A';
+////        __delay_cycles(1048576/4); // Atraso de 1 s para imprimir no terminal (MCLK = 1.048.576)
+//    }
+//
+//    return 0;
+//}
+//
+//void ser_str(char *p){
+//    int i = 0;
+//    while (p[i] != 0){
+//        ser_char(p[i]);
+//        i++;
+//    }
+//}
+//
+//void ser_char(char c){
+//    UCA1TXBUF = c;
+//    while((UCA0IFG&UCTXIFG)==0); // Esperar transmitir
+//}
+//
+////// SMCLK para gerar 9.600 (BRW = 6, BRF = 13, BRS = 0, UCOS16 = 1)
+////void uart1_config(void){
+////    UCA1CTL1 = UCSSEL_2 | // SMCLK
+////               UCSWRST;   // Reset
+////    UCA1CTL0 = 0;
+////    UCA1BRW = 6;
+////    UCA1MCTL = UCBRF_13 |
+////               UCBRS_0  |
+////               UCOS16;
+////    P4SEL |= BIT3 | BIT0;
+////    PMAPKEYID = 0x02D52;
+////    P4MAP0 = PM_UCA1TXD;
+////    P4MAP3 = PM_UCA1RXD;
+////
+////    UCA1CTL1 &= ~UCSWRST; // Desativando reset
+////}
+//
+//// SMCLK para gerar 9.600 (BRW = 6, BRF = 13, BRS = 0, UCOS16 = 1)
+//void uart0_config(void){
+//    UCA0CTL1 = UCSWRST;   // Reset
+//    UCA0CTL0 = 0;
+//    UCA0BRW = 3;
+//    UCA0MCTL = UCBRS_3;
+//    P3SEL |= BIT4 | BIT3;
+//    UCA0CTL1 = UCSSEL_1; // Desativando reset
+//}

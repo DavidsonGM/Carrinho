@@ -1,0 +1,11 @@
+#include <msp430.h>
+
+#define TRUE 1
+
+void USCI_A0_config(void);
+
+int main(void){
+
+    return 0;
+}
+

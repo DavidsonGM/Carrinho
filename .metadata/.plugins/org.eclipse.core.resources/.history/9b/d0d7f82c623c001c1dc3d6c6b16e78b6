@@ -1,0 +1,57 @@
+#include <msp430.h>
+
+#define TRUE 1
+#define TOPO 65535  // Topo da contagem = 50ms
+
+void ta0_config(void);
+void ta2_config(void);
+void gpio_config(void);
+
+int main(void){
+
+    WDTCTL = WDTPW | WDTHOLD;   // stop watchdog timer
+    gpio_config();
+    ta0_config();
+    ta2_config();
+
+    while (TRUE);
+    return 0;
+}
+
+//void ta2_config(void){
+//    TA2CTL = TASSEL_2 | MC_1;
+//    TA2CCR0 = TOPO;
+//    TA2CCTL2 = OUTMOD_6 | OUT; // Saida no modo Toggle/set
+//    TA2CCR2 = TA2CCR0/2;
+//}
+
+void ta0_config(void){
+    TA0CTL = TASSEL_2 | MC_1;   // Modo UP
+    TA0CCR0 = TOPO;
+    TA0CCTL4 = OUTMOD_6 | OUT;
+    TA0CCR4 = TA0CCR0/2;
+}
+
+void tb0_config(void){
+    TB0CTL = TBSSEL_2 | MC_1;
+    TB0CCR0 = TOPO;
+
+    TB0CCTL1 = OUTMOD_6 | OUT;
+    TB0CCR1 = TOPO/2;               // 50%
+}
+
+void gpio_config(void){
+    P1DIR |= BIT5;  //P1.5=saida
+    P1SEL |= BIT5;  //P1.5 = TA0.4
+
+    P2DIR |= BIT5;  // P2.5 Saida
+    P2SEL |= BIT5;  // P2.5 = TA2.2
+
+    P1DIR |=  BIT0; // Led Vm
+    P1OUT &= ~BIT0; // Apagado
+
+    P4DIR |= BIT7; // Led Vd
+    P4SEL |= BIT7;
+    PMAPKEYID = 0X02D52;   // Liberar mapeamento
+    P4MAP7 = PM_TB0CCR1A;
+}

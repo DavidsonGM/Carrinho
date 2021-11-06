@@ -1,0 +1,158 @@
+#include <msp430.h>
+
+#define TRUE 1
+#define TOPO 65535  // Topo da contagem = 50ms
+#define CR  0xD // ASCII para Carriage return: Voltar para o inicio da linha
+#define LF  0xA // ASCII para Line Feed: Quebra de linha
+#define RE     0
+#define NORMAL 1
+
+void ta0_config(void);
+//void ta2_config(void);
+void gpio_config(void);
+void tb0_config(void);
+
+void both_engines(void);
+void left_engine(void);
+void right_engine(void);
+void stop_engines(void);
+
+void uart1_config(void);
+void ser_char(char c);
+void ser_str(char *p);
+
+int main(void){
+    volatile char comando;
+    volatile int modo = NORMAL;
+
+    WDTCTL = WDTPW | WDTHOLD;   // stop watchdog timer
+    gpio_config();
+    ta0_config();
+    tb0_config();
+    uart1_config();
+
+    ser_str("Carrinho muito maneiro!\n");
+    ser_char(CR);
+    ser_str("Comandos: L, R, B, S, M, m.\n");
+    ser_char(CR);
+
+    while (TRUE){
+        while((UCA1IFG&UCRXIFG)==0); // Esperar receber
+            comando = UCA1RXBUF;     // Buffer de recepcao
+            switch(comando){
+                case 'L':
+                    left_engine();
+                    break;
+                case 'R':
+                    right_engine();
+                    break;
+                case 'B':
+                    both_engines();
+                    break;
+                case 'S':
+                    stop_engines();
+                    break;
+                case 'M':
+                    modo = NORMAL;
+                    ser_str("Modo: Normal\n");
+                    ser_char(CR);
+                    break;
+                case 'm':
+                    modo = RE;
+                    ser_str("Modo: Re\n");
+                    ser_char(CR);
+                    break;
+                case 'D':       // Temporario, simular a interrupcao do ultrassom
+                    stop_engines();
+                    __delay_cycles(1000000);
+                    modo = RE;
+                    right_engine();
+                    __delay_cycles(500000);
+                    both_engines();
+                    break;
+                }
+    }
+    return 0;
+}
+
+void both_engines(void) {
+    TA0CTL |= MC_1;
+    TB0CTL |= MC_1;
+}
+
+void left_engine(void) {
+    TA0CTL |=  MC_1;
+    TB0CTL &= ~MC_1;
+}
+
+void right_engine(void){
+    TA0CTL &= ~MC_1;
+    TB0CTL |=  MC_1;
+}
+void stop_engines(void){
+    TA0CTL &= ~MC_1;
+    TB0CTL &= ~MC_1;
+}
+
+void ser_char(char c){
+    UCA1TXBUF = c;
+    while((UCA1IFG&UCTXIFG)==0); // Esperar transmitir
+}
+
+void ser_str(char *p){
+    unsigned int i = 0;
+    while (p[i] != 0){
+        ser_char(p[i]);
+        i++;
+    }
+}
+
+// SMCLK/38.400bps => BRW = 27, UCBRS = 2, UCBRF = 0 e UCOS16 = 0
+void uart1_config(void){
+    UCA1CTL1 = UCSSEL_2 | // SMCLK
+               UCSWRST;   // Reset
+    UCA1CTL0 = 0;
+    UCA1BRW = 27;
+    UCA1MCTL = UCBRS_2; // BRF = 0 e UCOS16 = 0
+    P4SEL |= BIT5|BIT4;
+    UCA1CTL1 &= ~UCSWRST; // Desativando reset
+}
+
+//void ta2_config(void){
+//    TA2CTL = TASSEL_2 | MC_1;
+//    TA2CCR0 = TOPO;
+//    TA2CCTL2 = OUTMOD_6 | OUT; // Saida no modo Toggle/set
+//    TA2CCR2 = TA2CCR0/2;
+//}
+
+void ta0_config(void){
+    TA0CTL = TASSEL_2 | MC_1;   // Modo UP
+    TA0CCR0 = TOPO;
+    TA0CCTL4 = OUTMOD_6 | OUT;
+    TA0CCR4 = TA0CCR0/2;
+}
+
+void tb0_config(void){
+    TB0CTL = TBSSEL_2 | MC_1;
+    TB0CCR0 = TOPO;
+
+    TB0CCTL1 = OUTMOD_6 | OUT;
+    TB0CCR1 = TOPO/2;               // 50%
+}
+
+void gpio_config(void){
+    P1DIR |= BIT5;  //P1.5=saida
+    P1SEL |= BIT5;  //P1.5 = TA0.4
+
+    P2DIR |= BIT5;  // P2.5 Saida
+    P2SEL |= BIT5;  // P2.5 = TA2.2
+
+    P1DIR |=  BIT0; // Led Vm
+    P1OUT &= ~BIT0; // Apagado
+
+    P4DIR |= BIT7|BIT2|BIT1; // Led Vd | P4.2 e P4.1 Sentido da rotacao
+    P4SEL |= BIT7;
+    PMAPKEYID = 0X02D52;   // Liberar mapeamento
+    P4MAP7 = PM_TB0CCR1A;
+    P4OUT &= ~BIT2;          // Sentido da rotacao
+}
