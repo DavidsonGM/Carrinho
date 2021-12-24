@@ -7,4 +7,5 @@ Esse repositório consiste na implementação de um carrinho utilizando a plaqui
 Esse projeto foi feito utilizando IDE própria da texas, o Code Composer Studio, para compilar o arquivo e gerar o executável.
 
 ## Conexão
-Tenha muito cuidado ao conectar os módulos externos à placa, pois alguns necessitam de um divisor resistivo para não queimar algum pino de sua placa. Observe o arquivo [PinMap.txt](PinMap.txt) uma olhada nesse arquivo para mais ver como é a conexão de cada um dos componentes. Atente-se, também, à voltagem de cada componente, pois alguns funcionam em 3,3V e outros apenas em 5V.
+
+Tenha muito cuidado ao conectar os módulos externos à placa, pois alguns necessitam de um divisor resistivo para não queimar algum pino de sua placa. Observe o arquivo [PinMap.txt](PinMap.txt) para verificar como é a conexão de cada um dos componentes. Atente-se, também, à voltagem de cada componente, pois alguns funcionam em 3,3V e outros apenas em 5V.
