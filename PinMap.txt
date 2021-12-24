@@ -1,0 +1,22 @@
+Ultrassom:
+P2.0(TA1.1) -> Resistor de 4.7k (em série com o Echo) em paralelo com Resistor de 10k (em série com o terra)
+P1.5(TA0.4) -> Trig
+------------------------------------------------
+Ponte H (visão por cima e de trás do carrinho):
+OUT1 -> Parte de baixo do motor direito
+OUT2 -> Parte de cima do motor direito
+OUT3 -> Parte de cima do motor esquerdo
+OUT4 -> Parte de baixo do motor esquerdo
+------------------------------------------------
+Motores:
+P8.1 -> IN1
+P8.2 -> IN2
+P4.2 -> IN3
+P4.1 -> IN4
+P2.5(TA2.2) -> EnA
+P3.6(TB0.6) -> EnB
+------------------------------------------------
+Modulo bluetooth:
+P3.3 -> RXD
+P3.4 -> TXD
+------------------------------------------------
